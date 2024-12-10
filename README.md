@@ -13,7 +13,9 @@ This Python data analysis project examines the relationship between global tempe
 ## Data Sources
 The project utilizes two primary data sources:
 - Global temperature anomalies (1850-2024)
+  [Global Temperature Time Series](https://github.com/datasets/global-temp)
 - Atmospheric CO2 concentrations from Mauna Loa Observatory (1958-2024)
+  [CO2 PPM - Trends in Atmospheric Carbon Dioxide](https://github.com/datasets/co2-ppm)
 
 ## Technologies Used
 - Python 3.x
