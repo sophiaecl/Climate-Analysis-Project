@@ -44,8 +44,8 @@ climate_analysis/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/sophiaecl/climate-analysis.git
-cd climate-analysis
+git clone https://github.com/sophiaecl/Climate-Analysis-Project.git
+cd Climate-Analysis-Project
 ```
 
 2. Create and activate a virtual environment (optional but recommended):
@@ -61,13 +61,13 @@ pip install -r requirements.txt
 
 ## Usage
 
-1. Place your raw data files in the `data/raw/` directory
-2. Run the main analysis script:
+1. Run the main analysis script:
 ```bash
 python main.py
 ```
 
-3. Find the processed results in the `data/processed/` directory
+2. Find the processed results in the `data/processed/` directory
+3. Find the visualization results in the `output/` directory
 
 ## Contributing
 1. Fork the repository
