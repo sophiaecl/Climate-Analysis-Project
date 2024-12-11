@@ -1,5 +1,3 @@
-# main.py
-
 import argparse
 import os
 from climate_analysis.data_processor import ClimateDataProcessor
@@ -156,6 +154,34 @@ def main():
         disaster_type=args.disaster_type,
         output_path=os.path.join(args.output_dir, f'correlations_{viz_prefix}.png')
     )
+
+    # Add prediction analysis
+    print("\nTraining prediction models...")
+    predictor = ClimatePredictor()
+    predictions = predictor.train_models(merged_data, forecast_years=30)
+    
+    print("\nGenerating prediction visualizations...")
+    predictor.plot_predictions(
+        historical_data=merged_data,
+        country=args.country,
+        disaster_type=args.disaster_type,
+        output_dir=args.output_dir
+    )
+    
+    # Get prediction summary
+    summary = predictor.get_prediction_summary(merged_data)
+    
+    print("\nPrediction Model Performance:")
+    print(f"Temperature Model R² Score: {summary['model_metrics']['temperature_r2']:.3f}")
+    print(f"CO2 Model R² Score: {summary['model_metrics']['co2_r2']:.3f}")
+    print(f"Disaster Model R² Score: {summary['model_metrics']['disasters_r2']:.3f}")
+    
+    print("\nPredictions for Key Years:")
+    for year, values in summary['predictions_by_year'].items():
+        print(f"\nYear {year}:")
+        print(f"  Predicted Temperature Anomaly: {values['temperature']:.2f}°C")
+        print(f"  Predicted CO2 Level: {values['co2']:.1f} ppm")
+        print(f"  Predicted Number of Disasters: {values['disasters']:.0f}")
     
     # Print summary statistics
     print(f"\nSummary Statistics:")
