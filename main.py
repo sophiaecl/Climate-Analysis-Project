@@ -14,7 +14,8 @@ def get_default_paths():
         'temp_file': os.path.join(base_dir, 'data', 'raw', 'annual.csv'),
         'co2_file': os.path.join(base_dir, 'data', 'raw', 'co2-mm-gl.csv'),
         'disaster_file': os.path.join(base_dir, 'data', 'raw', 'climate-related-disasters.csv'),
-        'output_dir': os.path.join(base_dir, 'output')
+        'output_dir': os.path.join(base_dir, 'output'),
+        'data_dir': os.path.join(base_dir, 'data')
     }
 
 
@@ -43,6 +44,11 @@ def main():
         '--output-dir',
         default=default_paths['output_dir'],
         help='Directory for output files'
+    )
+    parser.add_argument(
+        '--data-dir',
+        default=default_paths['data_dir'],
+        help='Directory for data files'
     )
     parser.add_argument(
         '--country',
@@ -86,6 +92,8 @@ def main():
             print(f"  - {disaster_type}")
         return
     
+    os.makedirs(args.output_dir, exist_ok=True)
+
     # Load and process data
     print(f"Loading temperature data from {args.temp_file}...")
     data_processor.load_temperature_data(args.temp_file)
@@ -102,6 +110,13 @@ def main():
     
     print("\nMerging datasets...")
     merged_data = data_processor.merge_datasets()
+
+    print("\nSaving processed datasets...")
+    data_processor.save_processed_data(
+        args.data_dir,
+        country=args.country,
+        disaster_type=args.disaster_type
+    )
     
     print("\nCalculating trends and statistics...")
     summary_stats = data_processor.get_summary_stats(

@@ -1,5 +1,5 @@
 # climate_analysis/data_processor.py
-
+import os
 import pandas as pd
 import numpy as np
 
@@ -293,3 +293,50 @@ class ClimateDataProcessor:
         }
         
         return stats
+
+    def save_processed_data(self, data_dir, country=None, disaster_type='TOTAL'):
+        """
+        Save processed datasets to CSV files
+        
+        Parameters:
+        data_dir (str): Base directory for processed data
+        country (str): Country name for filename
+        disaster_type (str): Type of disaster for filename
+        """
+        try:
+            # Create processed data directory if it doesn't exist
+            processed_dir = os.path.join(data_dir, 'processed')
+            os.makedirs(processed_dir, exist_ok=True)
+            
+            # Generate base filename
+            region = country.lower().replace(' ', '_') if country else 'global'
+            disaster = disaster_type.lower().replace(' ', '_')
+            base_filename = f"{region}_{disaster}"
+            
+            # Save temperature data
+            if self.temp_data is not None:
+                temp_file = os.path.join(processed_dir, f'temperature_{base_filename}.csv')
+                self.temp_data.to_csv(temp_file, index=False)
+                print(f"Saved processed temperature data to: {temp_file}")
+            
+            # Save CO2 data
+            if self.co2_data is not None:
+                co2_file = os.path.join(processed_dir, f'co2_{base_filename}.csv')
+                self.co2_data.to_csv(co2_file, index=False)
+                print(f"Saved processed CO2 data to: {co2_file}")
+            
+            # Save disaster data
+            if self.disaster_data is not None:
+                disaster_file = os.path.join(processed_dir, f'disasters_{base_filename}.csv')
+                self.disaster_data.to_csv(disaster_file, index=False)
+                print(f"Saved processed disaster data to: {disaster_file}")
+            
+            # Save merged data
+            if self.merged_data is not None:
+                merged_file = os.path.join(processed_dir, f'merged_{base_filename}.csv')
+                self.merged_data.to_csv(merged_file, index=False)
+                print(f"Saved merged dataset to: {merged_file}")
+                
+        except Exception as e:
+            print(f"Error saving processed data: {str(e)}")
+            raise
