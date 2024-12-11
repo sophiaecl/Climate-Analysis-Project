@@ -2,6 +2,7 @@ import argparse
 import os
 from climate_analysis.data_processor import ClimateDataProcessor
 from climate_analysis.visualizer import ClimateVisualizer
+from climate_analysis.predictor import ClimatePredictor
 import pandas as pd
 
 def get_default_paths():
