@@ -12,8 +12,12 @@ class ClimateDataProcessor:
         self.disaster_data = None
         self.merged_data = None
         self.available_countries = None
+        self.disaster_types = [
+            'Drought', 'Extreme temperature', 'Flood', 'Landslide', 'Storm',
+            'Wildfire', 'TOTAL'
+        ]
 
-    def load_disaster_data(self, filepath, country=None):
+    def load_disaster_data(self, filepath, country=None, disaster_type='TOTAL'):
         """
         Load and process climate disaster data for a specific country or global data
         
@@ -27,6 +31,10 @@ class ClimateDataProcessor:
             
             # Store available countries for reference
             self.available_countries = sorted(df['Country'].unique().tolist())
+
+            # Validate disaster type
+            if disaster_type not in self.disaster_types:
+                raise ValueError(f"Invalid disaster type. Available types: {', '.join(self.disaster_types)}")
             
             # Filter for selected country or global data
             if country is None or country.lower() == 'global':
@@ -38,6 +46,10 @@ class ClimateDataProcessor:
                 selected_data = df[df['Country'] == country]
                 print(f"\nUsing disaster data for {country}")
             
+            #filter for disaster type
+            disaster_indicator = f"Climate related disasters frequency, Number of Disasters: {disaster_type}"
+            selected_data = selected_data[selected_data['Indicator'] == disaster_indicator]
+
             # Melt the year columns into rows
             years = [str(year) for year in range(1980, 2024)]
             disaster_data = pd.melt(
@@ -50,12 +62,10 @@ class ClimateDataProcessor:
             
             # Convert Year to integer and filter for total disasters
             disaster_data['Year'] = disaster_data['Year'].astype(int)
-            disaster_data = disaster_data[
-                disaster_data['Indicator'].str.contains('TOTAL')
-            ]
-            
-            # Clean up the data
+
+            # clean up the data and add disaster type column
             disaster_data = disaster_data[['Year', 'Disasters']].copy()
+            disaster_data['Disaster_Type'] = disaster_type
             
             print(f"Processed {len(disaster_data)} disaster records")
             print(f"Year range: {disaster_data['Year'].min()} to {disaster_data['Year'].max()}")
@@ -66,6 +76,10 @@ class ClimateDataProcessor:
         except Exception as e:
             print(f"Error loading disaster data: {str(e)}")
             raise
+
+    def get_disaster_types(self):
+        """Get list of available disaster types"""
+        return self.disaster_types
 
     def get_available_countries(self):
         """
@@ -229,18 +243,14 @@ class ClimateDataProcessor:
         
         return df
     
-    def get_summary_stats(self, country=None):
-        """
-        Generate summary statistics including disaster correlations
-        
-        Parameters:
-        country (str): Country name for the report header, if applicable
-        """
+    def get_summary_stats(self, country=None, disaster_type='TOTAL'):
+        """Generate summary statistics including disaster correlations"""
         if self.merged_data is None or self.merged_data.empty:
             raise ValueError("Must have valid merged data before calculating summary statistics")
         
         stats = {
             'country': country if country else 'Global',
+            'disaster_type': disaster_type,
             'temp_correlation': np.corrcoef(
                 self.merged_data['Temperature_Anomaly'],
                 self.merged_data['CO2_Level']
@@ -278,7 +288,8 @@ class ClimateDataProcessor:
                 'Year'
             ]),
             'avg_disasters_per_year': self.merged_data['Disasters'].mean(),
-            'total_disasters': self.merged_data['Disasters'].sum()
+            'total_disasters': self.merged_data['Disasters'].sum(),
+            'years_with_disasters': len(self.merged_data[self.merged_data['Disasters'] > 0])
         }
         
         return stats

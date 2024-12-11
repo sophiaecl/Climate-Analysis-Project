@@ -12,27 +12,41 @@ class ClimateVisualizer:
         sns.set_theme()  # This is more reliable than plt.style.use('seaborn')
         self.default_figsize = (12, 6)
         self.default_dpi = 100
+        self.disaster_colors = {
+            'TOTAL': 'purple',
+            'Flood': 'blue',
+            'Storm': 'cyan',
+            'Drought': 'brown',
+            'Wildfire': 'red',
+            'Landslide': 'orange',
+            'Extreme temperature': 'darkred'
+        }
 
-    def plot_disasters_trend(self, data, country=None, output_path: Optional[str] = None):
+
+    def plot_disasters_trend(self, data, country=None, disaster_type='TOTAL', output_path: Optional[str] = None):
         """
         Plot climate-related disasters trend over time
         
         Parameters:
         data (pandas.DataFrame): Data to plot
         country (str): Country name for the title, if applicable
+        disaster_type (str): Type of disaster being plotted
         output_path (str): Path to save the plot
         """
         plt.figure(figsize=self.default_figsize, dpi=self.default_dpi)
+        
+        color = self.disaster_colors.get(disaster_type, 'purple')
         
         sns.regplot(
             data=data,
             x='Year',
             y='Disasters',
             scatter_kws={'alpha':0.5},
-            line_kws={'color': 'purple'}
+            line_kws={'color': color}
         )
         
-        title = f"Climate-Related Disasters Trend - {country if country else 'Global'}"
+        region = country if country else 'Global'
+        title = f'{disaster_type} Disasters Trend - {region}'
         plt.title(title, pad=20)
         plt.xlabel('Year')
         plt.ylabel('Number of Disasters')
@@ -41,17 +55,19 @@ class ClimateVisualizer:
             plt.savefig(output_path, bbox_inches='tight')
         plt.close()
 
-    def plot_triple_correlation(self, data, country=None, output_path: Optional[str] = None):
+    def plot_triple_correlation(self, data, country=None, disaster_type='TOTAL', output_path: Optional[str] = None):
         """
         Plot correlation between temperature, CO2, and disasters
         
         Parameters:
         data (pandas.DataFrame): Data to plot
         country (str): Country name for the title, if applicable
+        disaster_type (str): Type of disaster being plotted
         output_path (str): Path to save the plot
         """
         fig, axes = plt.subplots(1, 3, figsize=(18, 6), dpi=self.default_dpi)
         region = country if country else 'Global'
+        color = self.disaster_colors.get(disaster_type, 'purple')
         
         # Temperature vs CO2
         sns.scatterplot(
@@ -87,9 +103,9 @@ class ClimateVisualizer:
             y='Disasters',
             ax=axes[1],
             scatter=False,
-            color='purple'
+            color=color
         )
-        axes[1].set_title(f'Disasters vs Temperature - {region}')
+        axes[1].set_title(f'{disaster_type} Disasters vs Temperature - {region}')
         axes[1].set_xlabel('Temperature Anomaly (°C)')
         axes[1].set_ylabel('Number of Disasters')
         
@@ -107,9 +123,9 @@ class ClimateVisualizer:
             y='Disasters',
             ax=axes[2],
             scatter=False,
-            color='green'
+            color=color
         )
-        axes[2].set_title(f'Disasters vs CO2 - {region}')
+        axes[2].set_title(f'{disaster_type} Disasters vs CO2 - {region}')
         axes[2].set_xlabel('CO2 Level (ppm)')
         axes[2].set_ylabel('Number of Disasters')
         

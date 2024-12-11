@@ -50,66 +50,41 @@ def main():
         help='Country to analyze (default: global data)'
     )
     parser.add_argument(
+        '--disaster-type',
+        default='TOTAL',
+        help='Type of disaster to analyze (default: TOTAL)'
+    )
+    parser.add_argument(
         '--list-countries',
         action='store_true',
         help='List available countries and exit'
     )
     parser.add_argument(
-        '--debug',
+        '--list-disasters',
         action='store_true',
-        help='Print debug information'
+        help='List available disaster types and exit'
     )
     
     args = parser.parse_args()
     
-    # Initialize processor and load disaster data to get country list
+    # Initialize processor
     data_processor = ClimateDataProcessor()
-    print(f"Loading temperature data from {args.temp_file}...")
-    temp_data = data_processor.load_temperature_data(args.temp_file)
-    
-    if args.debug:
-        print("\nDEBUG: Temperature Data Sample:")
-        print(temp_data.head())
-        print("\nTemperature Data Shape:", temp_data.shape)
-        print("\nTemperature Years:", sorted(temp_data['Year'].unique()))
-    
-    print(f"\nLoading CO2 data from {args.co2_file}...")
-    co2_data = data_processor.load_co2_data(args.co2_file)
-    
-    if args.debug:
-        print("\nDEBUG: CO2 Data Sample:")
-        print(co2_data.head())
-        print("\nCO2 Data Shape:", co2_data.shape)
-        print("\nCO2 Years:", sorted(co2_data['Year'].unique()))
-    
-    print(f"\nLoading disaster data from {args.disaster_file}...")
-    disaster_data = data_processor.load_disaster_data(args.disaster_file, country=args.country)
-    
-    if args.debug:
-        print("\nDEBUG: Disaster Data Sample:")
-        print(disaster_data.head())
-        print("\nDisaster Data Shape:", disaster_data.shape)
-        print("\nDisaster Years:", sorted(disaster_data['Year'].unique()))
-        
-    data_processor.load_disaster_data(args.disaster_file)
     
     # If --list-countries flag is used, print countries and exit
     if args.list_countries:
+        # Need to load disaster data first to get country list
+        data_processor.load_disaster_data(args.disaster_file)
         print("\nAvailable countries for analysis:")
         for country in data_processor.get_available_countries():
             print(f"  - {country}")
         return
     
-    # Verify input files exist
-    for file_path in [args.temp_file, args.co2_file, args.disaster_file]:
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"Input file not found: {file_path}")
-    
-    # Create output directory if it doesn't exist
-    os.makedirs(args.output_dir, exist_ok=True)
-    
-    # Initialize visualizer
-    visualizer = ClimateVisualizer()
+    # If --list-disasters flag is used, print disaster types and exit
+    if args.list_disasters:
+        print("\nAvailable disaster types for analysis:")
+        for disaster_type in data_processor.get_disaster_types():
+            print(f"  - {disaster_type}")
+        return
     
     # Load and process data
     print(f"Loading temperature data from {args.temp_file}...")
@@ -119,42 +94,58 @@ def main():
     data_processor.load_co2_data(args.co2_file)
     
     print(f"\nLoading disaster data from {args.disaster_file}...")
-    data_processor.load_disaster_data(args.disaster_file, country=args.country)
+    data_processor.load_disaster_data(
+        args.disaster_file, 
+        country=args.country,
+        disaster_type=args.disaster_type
+    )
     
     print("\nMerging datasets...")
     merged_data = data_processor.merge_datasets()
     
     print("\nCalculating trends and statistics...")
-    summary_stats = data_processor.get_summary_stats(country=args.country)
+    summary_stats = data_processor.get_summary_stats(
+        country=args.country,
+        disaster_type=args.disaster_type
+    )
     
-    # Generate visualizations with country-specific names
+    # Generate visualizations
     region = args.country if args.country else 'global'
-    print(f"\nGenerating visualizations for {region} data in {args.output_dir}...")
+    disaster = args.disaster_type.lower().replace(' ', '_')
+    viz_prefix = f"{region}_{disaster}"
+    
+    print(f"\nGenerating visualizations for {region} {args.disaster_type} disasters in {args.output_dir}...")
+    
+    visualizer = ClimateVisualizer()
     
     visualizer.plot_temperature_trend(
         merged_data,
-        os.path.join(args.output_dir, f'temperature_trend_{region}.png')
+        os.path.join(args.output_dir, f'temperature_trend_{viz_prefix}.png')
     )
     
     visualizer.plot_co2_trend(
         merged_data,
-        os.path.join(args.output_dir, f'co2_trend_{region}.png')
+        os.path.join(args.output_dir, f'co2_trend_{viz_prefix}.png')
     )
     
     visualizer.plot_disasters_trend(
         merged_data,
         country=args.country,
-        output_path=os.path.join(args.output_dir, f'disasters_trend_{region}.png')
+        disaster_type=args.disaster_type,
+        output_path=os.path.join(args.output_dir, f'disasters_trend_{viz_prefix}.png')
     )
     
     visualizer.plot_triple_correlation(
         merged_data,
         country=args.country,
-        output_path=os.path.join(args.output_dir, f'correlations_{region}.png')
+        disaster_type=args.disaster_type,
+        output_path=os.path.join(args.output_dir, f'correlations_{viz_prefix}.png')
     )
     
     # Print summary statistics
-    print(f"\nSummary Statistics for {summary_stats['country']}:")
+    print(f"\nSummary Statistics:")
+    print(f"Region: {summary_stats['country']}")
+    print(f"Disaster Type: {summary_stats['disaster_type']}")
     print(f"Temperature-CO2 Correlation: {summary_stats['temp_correlation']:.3f}")
     print(f"Temperature-Disasters Correlation: {summary_stats['disaster_temp_correlation']:.3f}")
     print(f"CO2-Disasters Correlation: {summary_stats['disaster_co2_correlation']:.3f}")
@@ -166,6 +157,7 @@ def main():
     print(f"Fewest Disasters Year: {summary_stats['disasters_min_year']}")
     print(f"Average Disasters per Year: {summary_stats['avg_disasters_per_year']:.1f}")
     print(f"Total Disasters: {summary_stats['total_disasters']:.0f}")
+    print(f"Years with Disasters: {summary_stats['years_with_disasters']}")
 
 if __name__ == "__main__":
     main()
