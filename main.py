@@ -11,7 +11,7 @@ def get_default_paths():
     
     return {
         'temp_file': os.path.join(base_dir, 'data', 'raw', 'annual.csv'),
-        'co2_file': os.path.join(base_dir, 'data', 'raw', 'co2-mm-mlo.csv'),
+        'co2_file': os.path.join(base_dir, 'data', 'raw', 'co2-mm-gl.csv'),
         'output_dir': os.path.join(base_dir, 'output')
     }
 
@@ -29,7 +29,7 @@ def main():
     parser.add_argument(
         '--co2-file',
         default=default_paths['co2_file'],
-        help='Path to CO2 data CSV (default: data/raw/co2-mm-mlo.csv)'
+        help='Path to CO2 data CSV (default: data/raw/co2-mm-gl.csv)'
     )
     parser.add_argument(
         '--output-dir',

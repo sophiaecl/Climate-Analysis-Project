@@ -68,8 +68,8 @@ class ClimateDataProcessor:
             print("\nFirst few rows of raw data:")
             print(df[['Date', 'Average']].head())
             
-            # Extract year by truncating the decimal date
-            df['Year'] = df['Date'].astype(float).astype(int)
+            # Parse Date as datetime and extract the year
+            df['Year'] = pd.to_datetime(df['Date'], format='%Y-%m').dt.year
             df['CO2_Level'] = df['Average']
             
             # Remove invalid measurements (marked as -99.99)
@@ -89,6 +89,7 @@ class ClimateDataProcessor:
         except Exception as e:
             print(f"Error loading CO2 data: {str(e)}")
             raise
+
     
     def merge_datasets(self):
         """Merge temperature and CO2 data on year"""
