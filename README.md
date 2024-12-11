@@ -13,7 +13,9 @@ This Python data analysis project examines the relationship between global tempe
 ## Data Sources
 The project utilizes two primary data sources:
 - Global temperature anomalies (1850-2024)
+  [Global Temperature Time Series](https://github.com/datasets/global-temp)
 - Atmospheric CO2 concentrations from Mauna Loa Observatory (1958-2024)
+  [CO2 PPM - Trends in Atmospheric Carbon Dioxide](https://github.com/datasets/co2-ppm)
 
 ## Technologies Used
 - Python 3.x
@@ -42,8 +44,8 @@ climate_analysis/
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/sophiaecl/climate-analysis.git
-cd climate-analysis
+git clone https://github.com/sophiaecl/Climate-Analysis-Project.git
+cd Climate-Analysis-Project
 ```
 
 2. Create and activate a virtual environment (optional but recommended):
@@ -59,13 +61,13 @@ pip install -r requirements.txt
 
 ## Usage
 
-1. Place your raw data files in the `data/raw/` directory
-2. Run the main analysis script:
+1. Run the main analysis script:
 ```bash
 python main.py
 ```
 
-3. Find the processed results in the `data/processed/` directory
+2. Find the processed results in the `data/processed/` directory
+3. Find the visualization results in the `output/` directory
 
 ## Contributing
 1. Fork the repository
