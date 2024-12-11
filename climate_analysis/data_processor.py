@@ -9,7 +9,74 @@ class ClimateDataProcessor:
     def __init__(self):
         self.temp_data = None
         self.co2_data = None
+        self.disaster_data = None
         self.merged_data = None
+        self.available_countries = None
+
+    def load_disaster_data(self, filepath, country=None):
+        """
+        Load and process climate disaster data for a specific country or global data
+        
+        Parameters:
+        filepath (str): Path to the disaster data CSV
+        country (str): Country name to filter for. If None, uses global data
+        """
+        try:
+            # Read CSV
+            df = pd.read_csv(filepath)
+            
+            # Store available countries for reference
+            self.available_countries = sorted(df['Country'].unique().tolist())
+            
+            # Filter for selected country or global data
+            if country is None or country.lower() == 'global':
+                selected_data = df[df['Country'] == 'All Countries and International Organizations']
+                print("\nUsing global disaster data")
+            else:
+                if country not in self.available_countries:
+                    raise ValueError(f"Country '{country}' not found in dataset. Use get_available_countries() to see options.")
+                selected_data = df[df['Country'] == country]
+                print(f"\nUsing disaster data for {country}")
+            
+            # Melt the year columns into rows
+            years = [str(year) for year in range(1980, 2024)]
+            disaster_data = pd.melt(
+                selected_data,
+                id_vars=['Country', 'Indicator'],
+                value_vars=years,
+                var_name='Year',
+                value_name='Disasters'
+            )
+            
+            # Convert Year to integer and filter for total disasters
+            disaster_data['Year'] = disaster_data['Year'].astype(int)
+            disaster_data = disaster_data[
+                disaster_data['Indicator'].str.contains('TOTAL')
+            ]
+            
+            # Clean up the data
+            disaster_data = disaster_data[['Year', 'Disasters']].copy()
+            
+            print(f"Processed {len(disaster_data)} disaster records")
+            print(f"Year range: {disaster_data['Year'].min()} to {disaster_data['Year'].max()}")
+            
+            self.disaster_data = disaster_data
+            return self.disaster_data
+            
+        except Exception as e:
+            print(f"Error loading disaster data: {str(e)}")
+            raise
+
+    def get_available_countries(self):
+        """
+        Get list of available countries in the dataset
+        
+        Returns:
+        list: Sorted list of country names
+        """
+        if self.available_countries is None:
+            return []
+        return self.available_countries
     
     def load_temperature_data(self, filepath):
         """
@@ -37,8 +104,8 @@ class ClimateDataProcessor:
             # Filter for valid data
             df = df.dropna(subset=['Year', 'Mean'])
             
-            # Create clean dataset
-            temp_data = df[['Year', 'Mean']].copy()
+            # Create clean dataset with single entry per year (taking mean if multiple entries)
+            temp_data = df.groupby('Year')['Mean'].mean().reset_index()
             temp_data.columns = ['Year', 'Temperature_Anomaly']
             
             print(f"\nProcessed {len(temp_data)} temperature records")
@@ -92,16 +159,17 @@ class ClimateDataProcessor:
 
     
     def merge_datasets(self):
-        """Merge temperature and CO2 data on year"""
-        if self.temp_data is None or self.co2_data is None:
-            raise ValueError("Must load both temperature and CO2 data before merging")
+        """Merge temperature, CO2, and disaster data on year"""
+        if any(x is None for x in [self.temp_data, self.co2_data, self.disaster_data]):
+            raise ValueError("Must load temperature, CO2, and disaster data before merging")
         
         try:
             print("\nPre-merge data ranges:")
             print(f"Temperature years: {self.temp_data['Year'].min()} to {self.temp_data['Year'].max()}")
             print(f"CO2 years: {self.co2_data['Year'].min()} to {self.co2_data['Year'].max()}")
+            print(f"Disaster years: {self.disaster_data['Year'].min()} to {self.disaster_data['Year'].max()}")
             
-            # Merge datasets
+            # First merge temp and CO2 data
             merged = pd.merge(
                 self.temp_data, 
                 self.co2_data,
@@ -109,19 +177,27 @@ class ClimateDataProcessor:
                 how='inner'
             )
             
-            # Sort by year
-            merged = merged.sort_values('Year')
+            # Then merge with disaster data
+            final_merged = pd.merge(
+                merged,
+                self.disaster_data,
+                on='Year',
+                how='inner'
+            )
             
-            if merged.empty:
-                raise ValueError("No overlapping years found between temperature and CO2 data")
+            # Sort by year
+            final_merged = final_merged.sort_values('Year')
+            
+            if final_merged.empty:
+                raise ValueError("No overlapping years found between datasets")
             
             print(f"\nMerged dataset:")
-            print(f"Number of records: {len(merged)}")
-            print(f"Year range: {merged['Year'].min()} to {merged['Year'].max()}")
+            print(f"Number of records: {len(final_merged)}")
+            print(f"Year range: {final_merged['Year'].min()} to {final_merged['Year'].max()}")
             print("\nFirst few records:")
-            print(merged.head())
+            print(final_merged.head())
             
-            self.merged_data = merged
+            self.merged_data = final_merged
             return self.merged_data
             
         except Exception as e:
@@ -153,15 +229,29 @@ class ClimateDataProcessor:
         
         return df
     
-    def get_summary_stats(self):
-        """Generate summary statistics for the data"""
+    def get_summary_stats(self, country=None):
+        """
+        Generate summary statistics including disaster correlations
+        
+        Parameters:
+        country (str): Country name for the report header, if applicable
+        """
         if self.merged_data is None or self.merged_data.empty:
             raise ValueError("Must have valid merged data before calculating summary statistics")
         
         stats = {
+            'country': country if country else 'Global',
             'temp_correlation': np.corrcoef(
                 self.merged_data['Temperature_Anomaly'],
                 self.merged_data['CO2_Level']
+            )[0,1],
+            'disaster_temp_correlation': np.corrcoef(
+                self.merged_data['Temperature_Anomaly'],
+                self.merged_data['Disasters']
+            )[0,1],
+            'disaster_co2_correlation': np.corrcoef(
+                self.merged_data['CO2_Level'],
+                self.merged_data['Disasters']
             )[0,1],
             'temp_min_year': int(self.merged_data.loc[
                 self.merged_data['Temperature_Anomaly'].idxmin(),
@@ -178,7 +268,17 @@ class ClimateDataProcessor:
             'co2_max_year': int(self.merged_data.loc[
                 self.merged_data['CO2_Level'].idxmax(),
                 'Year'
-            ])
+            ]),
+            'disasters_min_year': int(self.merged_data.loc[
+                self.merged_data['Disasters'].idxmin(),
+                'Year'
+            ]),
+            'disasters_max_year': int(self.merged_data.loc[
+                self.merged_data['Disasters'].idxmax(),
+                'Year'
+            ]),
+            'avg_disasters_per_year': self.merged_data['Disasters'].mean(),
+            'total_disasters': self.merged_data['Disasters'].sum()
         }
         
         return stats

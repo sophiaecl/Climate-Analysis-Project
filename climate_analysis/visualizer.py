@@ -12,6 +12,112 @@ class ClimateVisualizer:
         sns.set_theme()  # This is more reliable than plt.style.use('seaborn')
         self.default_figsize = (12, 6)
         self.default_dpi = 100
+
+    def plot_disasters_trend(self, data, country=None, output_path: Optional[str] = None):
+        """
+        Plot climate-related disasters trend over time
+        
+        Parameters:
+        data (pandas.DataFrame): Data to plot
+        country (str): Country name for the title, if applicable
+        output_path (str): Path to save the plot
+        """
+        plt.figure(figsize=self.default_figsize, dpi=self.default_dpi)
+        
+        sns.regplot(
+            data=data,
+            x='Year',
+            y='Disasters',
+            scatter_kws={'alpha':0.5},
+            line_kws={'color': 'purple'}
+        )
+        
+        title = f"Climate-Related Disasters Trend - {country if country else 'Global'}"
+        plt.title(title, pad=20)
+        plt.xlabel('Year')
+        plt.ylabel('Number of Disasters')
+        
+        if output_path:
+            plt.savefig(output_path, bbox_inches='tight')
+        plt.close()
+
+    def plot_triple_correlation(self, data, country=None, output_path: Optional[str] = None):
+        """
+        Plot correlation between temperature, CO2, and disasters
+        
+        Parameters:
+        data (pandas.DataFrame): Data to plot
+        country (str): Country name for the title, if applicable
+        output_path (str): Path to save the plot
+        """
+        fig, axes = plt.subplots(1, 3, figsize=(18, 6), dpi=self.default_dpi)
+        region = country if country else 'Global'
+        
+        # Temperature vs CO2
+        sns.scatterplot(
+            data=data,
+            x='CO2_Level',
+            y='Temperature_Anomaly',
+            ax=axes[0],
+            alpha=0.6
+        )
+        sns.regplot(
+            data=data,
+            x='CO2_Level',
+            y='Temperature_Anomaly',
+            ax=axes[0],
+            scatter=False,
+            color='red'
+        )
+        axes[0].set_title(f'Temperature vs CO2 - {region}')
+        axes[0].set_xlabel('CO2 Level (ppm)')
+        axes[0].set_ylabel('Temperature Anomaly (°C)')
+        
+        # Temperature vs Disasters
+        sns.scatterplot(
+            data=data,
+            x='Temperature_Anomaly',
+            y='Disasters',
+            ax=axes[1],
+            alpha=0.6
+        )
+        sns.regplot(
+            data=data,
+            x='Temperature_Anomaly',
+            y='Disasters',
+            ax=axes[1],
+            scatter=False,
+            color='purple'
+        )
+        axes[1].set_title(f'Disasters vs Temperature - {region}')
+        axes[1].set_xlabel('Temperature Anomaly (°C)')
+        axes[1].set_ylabel('Number of Disasters')
+        
+        # CO2 vs Disasters
+        sns.scatterplot(
+            data=data,
+            x='CO2_Level',
+            y='Disasters',
+            ax=axes[2],
+            alpha=0.6
+        )
+        sns.regplot(
+            data=data,
+            x='CO2_Level',
+            y='Disasters',
+            ax=axes[2],
+            scatter=False,
+            color='green'
+        )
+        axes[2].set_title(f'Disasters vs CO2 - {region}')
+        axes[2].set_xlabel('CO2 Level (ppm)')
+        axes[2].set_ylabel('Number of Disasters')
+        
+        plt.tight_layout()
+        
+        if output_path:
+            plt.savefig(output_path, bbox_inches='tight')
+        plt.close()
         
     def plot_temperature_trend(self, data, output_path: Optional[str] = None):
         """Plot temperature anomaly trend over time"""
