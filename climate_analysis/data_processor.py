@@ -1,4 +1,3 @@
-# climate_analysis/data_processor.py
 import os
 import pandas as pd
 import numpy as np
