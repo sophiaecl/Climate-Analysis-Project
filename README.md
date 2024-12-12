@@ -62,13 +62,13 @@ cd Climate-Analysis-Project
 
 2. Create and activate a virtual environment (optional but recommended):
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # On Windows, use: venv\Scripts\activate
 ```
 
 3. Install required packages:
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Usage
@@ -76,36 +76,36 @@ pip install -r requirements.txt
 ### Basic Analysis
 Run the main analysis script for global data:
 ```bash
-python main.py
+python3 main.py
 ```
 
 ### Country-Specific Analysis
 Analyze data for a specific country:
 ```bash
-python main.py --country "Spain"
+python3 main.py --country "Spain"
 ```
 
 ### Specific Disaster Type Analysis
 Analyze a specific type of natural disaster:
 ```bash
-python main.py --disaster-type "Flood"
+python3 main.py --disaster-type "Flood"
 ```
 
 ### Specific Country and Disaster Type Analysis
 Analyze a specific type of natural disaster:
 ```bash
-python main.py --country "Spain" --disaster-type "Flood"
+python3 main.py --country "Spain" --disaster-type "Flood"
 ```
 
 ### List Available Options
 View available countries:
 ```bash
-python main.py --list-countries
+python3 main.py --list-countries
 ```
 
 View available disaster types:
 ```bash
-python main.py --list-disasters
+python3 main.py --list-disasters
 ```
 
 ### Output
