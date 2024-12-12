@@ -1,40 +1,52 @@
-# Climate Change Analysis: Temperature Anomalies and CO2 Levels
+# Climate Change Analysis: Temperature, CO2, and Natural Disasters
 
 ## Overview
-This Python data analysis project examines the relationship between global temperature anomalies and atmospheric CO2 concentrations from 1850 to 2024. Through processing and visualization of climate data, the project demonstrates long-term trends and correlations between temperature changes and CO2 levels.
+This Python data analysis project examines the relationships between global temperature anomalies, atmospheric CO2 concentrations, and climate-related natural disasters from 1980 to 2024. Through processing and visualization of climate data, the project demonstrates long-term trends and correlations between temperature changes, CO2 levels, and the frequency of various types of natural disasters.
 
 ## Features
-- Data processing of historical temperature and CO2 measurements
+- Processing and analysis of temperature, CO2, and natural disaster data
+- Global and country-specific analysis options
+- Multiple disaster type analysis (floods, droughts, storms, etc.)
 - Time series analysis of climate trends
-- Visualization of temperature anomalies and CO2 concentration changes
+- Visualization of:
+  - Temperature anomalies and CO2 concentration changes
+  - Natural disaster frequency trends
+  - Stacked bar charts of disaster type distribution
+  - Correlation analysis between variables
+- Statistical analysis and predictions
 - Calculation of decadal averages and year-over-year changes
-- Statistical analysis of the relationship between temperature and CO2 levels
 
 ## Data Sources
-The project utilizes two primary data sources:
+The project utilizes three primary data sources:
 - Global temperature anomalies (1850-2024)
   [Global Temperature Time Series](https://github.com/datasets/global-temp)
 - Atmospheric CO2 concentrations from Mauna Loa Observatory (1958-2024)
   [CO2 PPM - Trends in Atmospheric Carbon Dioxide](https://github.com/datasets/co2-ppm)
+- Climate-related natural disasters (1980-2024)
+  [Natural Disasters Dataset](https://climatedata.imf.org/datasets/b13b69ee0dde43a99c811f592af4e821/explore)
 
 ## Technologies Used
 - Python 3.x
 - Pandas for data processing
 - Matplotlib and Seaborn for visualization
 - NumPy for numerical analysis
+- Scikit-learn for predictive modeling
 
 ## Project Structure
 ```
 climate_analysis/
 ├── data/
 │   ├── raw/                    # Original data files
-│   │   ├── annual.csv         # Temperature data
-│   │   └── co2-mm-mlo.csv    # CO2 measurements
+│   │   ├── annual.csv          # Temperature data
+│   │   ├── co2-mm-gl.csv       # CO2 measurements
+│   │   └── climate-related-disasters.csv  # Disaster data
 │   └── processed/             # Processed data outputs
 ├── climate_analysis/          # Source code
 │   ├── __init__.py
 │   ├── data_processor.py     # Data processing module
-│   └── visualizer.py         # Visualization module
+│   ├── visualizer.py         # Visualization module
+│   └── predictor.py          # Prediction modeling module
+├── output/                   # Visualization outputs
 ├── main.py                   # Main execution script
 ├── requirements.txt          # Project dependencies
 └── README.md                # Project documentation
@@ -61,13 +73,50 @@ pip install -r requirements.txt
 
 ## Usage
 
-1. Run the main analysis script:
+### Basic Analysis
+Run the main analysis script for global data:
 ```bash
 python main.py
 ```
 
-2. Find the processed results in the `data/processed/` directory
-3. Find the visualization results in the `output/` directory
+### Country-Specific Analysis
+Analyze data for a specific country:
+```bash
+python main.py --country "Spain"
+```
+
+### Specific Disaster Type Analysis
+Analyze a specific type of natural disaster:
+```bash
+python main.py --disaster-type "Flood"
+```
+
+### Specific Country and Disaster Type Analysis
+Analyze a specific type of natural disaster:
+```bash
+python main.py --country "Spain" --disaster-type "Flood"
+```
+
+### List Available Options
+View available countries:
+```bash
+python main.py --list-countries
+```
+
+View available disaster types:
+```bash
+python main.py --list-disasters
+```
+
+### Output
+- Processed data files will be saved in the `data/processed/` directory
+- Visualizations will be saved in the `output/` directory, including:
+  - Temperature trends
+  - CO2 concentration trends
+  - Disaster frequency trends
+  - Correlation analyses
+  - Disaster type breakdown charts
+  - Prediction visualizations
 
 ## Contributing
 1. Fork the repository
@@ -80,7 +129,9 @@ python main.py
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgements
-This project was developed as part of the Programming with Python course to demonstrate proficiency in data analysis, object-oriented programming, and scientific computing with Python.
+- This project was developed to demonstrate comprehensive climate data analysis using Python
+- Special thanks to the maintainers of the global temperature, CO2, and natural disaster datasets
+- Developed as part of the Programming with Python course to showcase data analysis, visualization, and predictive modeling skills
 
 ## Contact
 For questions and feedback, please open an issue in the GitHub repository.
