@@ -50,24 +50,38 @@ class ClimateDataProcessor:
             selected_data = selected_data[selected_data['Indicator'] == disaster_indicator]
 
             # Melt the year columns into rows
-            years = [str(year) for year in range(1980, 2024)]
-            disaster_data = pd.melt(
-                selected_data,
-                id_vars=['Country', 'Indicator'],
-                value_vars=years,
-                var_name='Year',
-                value_name='Disasters'
-            )
+            if selected_data.empty:
+                print(f"\nWarning: No disaster data found for {disaster_type} in {country if country else 'global'}")
+                # Create empty dataset with zero values
+                years = list(range(1980, 2024))
+                disaster_data = pd.DataFrame({
+                    'Year': years,
+                    'Disasters': [0] * len(years),
+                    'Disaster_Type': [disaster_type] * len(years)
+                })
+            else:
+                # Melt the year columns into rows
+                years = [str(year) for year in range(1980, 2024)]
+                disaster_data = pd.melt(
+                    selected_data,
+                    id_vars=['Country', 'Indicator'],
+                    value_vars=years,
+                    var_name='Year',
+                    value_name='Disasters'
+                )
             
-            # Convert Year to integer and filter for total disasters
-            disaster_data['Year'] = disaster_data['Year'].astype(int)
+                # Convert Year to integer and filter for total disasters
+                disaster_data['Year'] = disaster_data['Year'].astype(int)
+                disaster_data['Disasters'] = disaster_data['Disasters'].fillna(0)
 
-            # clean up the data and add disaster type column
-            disaster_data = disaster_data[['Year', 'Disasters']].copy()
-            disaster_data['Disaster_Type'] = disaster_type
+                # clean up the data and add disaster type column
+                disaster_data = disaster_data[['Year', 'Disasters']].copy()
+                disaster_data['Disaster_Type'] = disaster_type
             
             print(f"Processed {len(disaster_data)} disaster records")
             print(f"Year range: {disaster_data['Year'].min()} to {disaster_data['Year'].max()}")
+            print(f"Years with disasters: {len(disaster_data[disaster_data['Disasters'] > 0])}")
+            print(f"Years with no disasters: {len(disaster_data[disaster_data['Disasters'] == 0])}")
             
             self.disaster_data = disaster_data
             return self.disaster_data
