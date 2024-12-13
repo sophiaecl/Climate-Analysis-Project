@@ -18,11 +18,11 @@ class ClimateDataProcessor:
 
     def load_disaster_data(self, filepath, country=None, disaster_type='TOTAL'):
         """
-        Load and process climate disaster data for a specific country or global data
+        Load and process climate disaster data for a specific country or aggregate global data
         
         Parameters:
         filepath (str): Path to the disaster data CSV
-        country (str): Country name to filter for. If None, uses global data
+        country (str): Country name to filter for. If None, aggregates global data
         """
         try:
             # Read CSV
@@ -35,24 +35,12 @@ class ClimateDataProcessor:
             if disaster_type not in self.disaster_types:
                 raise ValueError(f"Invalid disaster type. Available types: {', '.join(self.disaster_types)}")
             
-            # Filter for selected country or global data
-            if country is None or country.lower() == 'global':
-                selected_data = df[df['Country'] == 'All Countries and International Organizations']
-                print("\nUsing global disaster data")
-            else:
-                if country not in self.available_countries:
-                    raise ValueError(f"Country '{country}' not found in dataset. Use get_available_countries() to see options.")
-                selected_data = df[df['Country'] == country]
-                print(f"\nUsing disaster data for {country}")
-            
-            #filter for disaster type
+            # Filter for disaster type
             disaster_indicator = f"Climate related disasters frequency, Number of Disasters: {disaster_type}"
-            selected_data = selected_data[selected_data['Indicator'] == disaster_indicator]
+            selected_data = df[df['Indicator'] == disaster_indicator]
 
-            # Melt the year columns into rows
             if selected_data.empty:
-                print(f"\nWarning: No disaster data found for {disaster_type} in {country if country else 'global'}")
-                # Create empty dataset with zero values
+                print(f"\nWarning: No disaster data found for {disaster_type}")
                 years = list(range(1980, 2024))
                 disaster_data = pd.DataFrame({
                     'Year': years,
@@ -60,24 +48,30 @@ class ClimateDataProcessor:
                     'Disaster_Type': [disaster_type] * len(years)
                 })
             else:
-                # Melt the year columns into rows
+                # Melt the data to create Year and Disasters columns
                 years = [str(year) for year in range(1980, 2024)]
-                disaster_data = pd.melt(
+                melted_data = pd.melt(
                     selected_data,
                     id_vars=['Country', 'Indicator'],
                     value_vars=years,
                     var_name='Year',
                     value_name='Disasters'
                 )
-            
-                # Convert Year to integer and filter for total disasters
-                disaster_data['Year'] = disaster_data['Year'].astype(int)
-                disaster_data['Disasters'] = disaster_data['Disasters'].fillna(0)
+                melted_data['Year'] = melted_data['Year'].astype(int)
+                melted_data['Disasters'] = melted_data['Disasters'].fillna(0)
 
-                # clean up the data and add disaster type column
-                disaster_data = disaster_data[['Year', 'Disasters']].copy()
-                disaster_data['Disaster_Type'] = disaster_type
-            
+                # Aggregate data globally if no specific country is provided
+                if country is None or country.lower() == 'global':
+                    print("\nAggregating global disaster data")
+                    disaster_data = melted_data.groupby('Year', as_index=False).agg({'Disasters': 'sum'})
+                    disaster_data['Disaster_Type'] = disaster_type
+                else:
+                    # Filter for the specified country
+                    if country not in self.available_countries:
+                        raise ValueError(f"Country '{country}' not found in dataset. Use get_available_countries() to see options.")
+                    disaster_data = melted_data[melted_data['Country'] == country][['Year', 'Disasters']]
+                    disaster_data['Disaster_Type'] = disaster_type
+
             print(f"Processed {len(disaster_data)} disaster records")
             print(f"Year range: {disaster_data['Year'].min()} to {disaster_data['Year'].max()}")
             print(f"Years with disasters: {len(disaster_data[disaster_data['Disasters'] > 0])}")
@@ -85,7 +79,7 @@ class ClimateDataProcessor:
             
             self.disaster_data = disaster_data
             return self.disaster_data
-            
+
         except Exception as e:
             print(f"Error loading disaster data: {str(e)}")
             raise
